@@ -1,0 +1,28 @@
+<%- include("partials/head.ejs") %>
+<%- include("partials/header.ejs") %>
+<form method="POST">
+  <div>
+    <label name="name">Enter your name:</label>
+    <input type="text" name="name" />
+  </div>
+  <div>
+    <label name="email">Enter your email:</label>
+    <input type="email" name="email" />
+  </div>
+  <div>
+    <label name="password">Enter your password:</label>
+    <input type="password" name="password" />
+  </div>
+  <div>
+    <label name="password1">Confirm your password:</label>
+    <input type="password1" name="password1" />
+  </div>
+  <div>
+    <input type="hidden" name="_csrf" value="<%= _csrf %>">
+    <button type="submit">Register</button>
+    <a href="/">
+      <button type="button">Cancel</button>
+    </a>
+  </div>
+</form>
+<%- include("partials/footer.ejs") %>
