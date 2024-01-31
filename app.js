@@ -36,24 +36,38 @@ const passportInit = require("./passport/passportInit");
 
 app.use(require("body-parser").urlencoded({ extended: true }));
 
-const cookieParser = require("cookie-parser")
-const csrf = require("host-csrf")
+const cookieParser = require("cookie-parser");
+const csrf = require("host-csrf");
 
 app.use(cookieParser(process.env.SESSION_SECRET));
 // app.use(express.urlencoded({ extended: false }));
 let csrf_development_mode = true;
 if (app.get("env") === "production") {
   csrf_development_mode = false;
-  app.set("trust proxy", 1)
+  app.set("trust proxy", 1);
 }
 
 const csrf_options = {
   protected_operations: ["PATCH"],
   protected_content_types: ["application/json"],
-  development_mode: csrf_development_mode
+  development_mode: csrf_development_mode,
 };
 
 app.use(csrf(csrf_options));
+
+// step 9 - middleware for security
+const helmet = require("helmet");
+const xss = require("xss-clean");
+const rateLimiter = require("express-rate-limit");
+
+app.use(helmet());
+app.use(xss());
+app.use(
+  rateLimiter({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+  })
+);
 
 passportInit();
 app.use(passport.initialize());
@@ -67,13 +81,16 @@ app.get("/", (req, res) => {
 });
 app.use("/sessions", require("./routes/sessionRoutes"));
 
-app.set("view engine", "ejs");
-
-
 // secret word handling
 const secretWordRouter = require("./routes/secretWord");
 const auth = require("./middleware/auth");
 app.use("/secretWord", auth, secretWordRouter);
+
+// jobs router
+const jobsRouter = require("./routes/jobs");
+app.use("/jobs", auth, jobsRouter);
+
+app.set("view engine", "ejs");
 
 app.use((req, res) => {
   res.status(404).send(`That page (${req.url}) was not found.`);
